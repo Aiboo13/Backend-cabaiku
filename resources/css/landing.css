@@ -8,8 +8,9 @@ body{font-family:var(--font-body);color:#1A1D23;line-height:1.6;}
 /* Navbar */
 .navbar{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:0;z-index:100;}
 .nav-container{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:70px;}
-.logo{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--primary);text-decoration:none;}
-.logo span{font-style:italic;color:rgba(192,57,43,.6);}
+.logo{font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(145deg,#922B21 0%,#C0392B 60%,#E74C3C 100%);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(192,57,43,.22);flex:0 0 auto;color:#fff;font-size:1.05rem;}
+.logo-text span{font-style:italic;color:rgba(192,57,43,.6);}
 .nav-links{display:none;list-style:none;gap:32px;}
 @media(min-width:768px){.nav-links{display:flex;}}
 .nav-links a{color:#1A1D23;text-decoration:none;font-weight:500;font-size:.95rem;transition:color .2s;}
