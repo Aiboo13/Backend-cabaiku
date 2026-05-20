@@ -102,12 +102,15 @@ class DeteksiController extends Controller
         $hasilSource = $this->pickValue($data, ['hasil', 'label', 'prediction', 'predictions', 'class_name', 'kelas', 'class']);
         $hasil = $this->normalizeHasil($hasilSource);
         $fallback = $this->fallbackDiagnosis($hasil);
+        $accuracySource = $this->pickValue($data, ['akurasi', 'confidence', 'probability', 'score', 'confidence_score', 'confidence_pct', 'conf'])
+            ?? $this->findByKeysRecursive((array) $data, ['akurasi', 'confidence', 'probability', 'score', 'confidence_score', 'confidence_pct', 'conf'])
+            ?? $this->extractAccuracyFromPredictions((array) $data);
 
         return [
             'hasil' => $hasil,
             'penyakit' => $this->normalizeText($this->pickValue($data, ['penyakit', 'disease', 'label_detail']) ?? $fallback['penyakit']),
             'tingkat_keparahan' => $this->normalizeSeverity($this->pickValue($data, ['tingkat_keparahan', 'severity']) ?? $fallback['tingkat_keparahan']),
-            'akurasi' => $this->normalizeAccuracy($this->pickValue($data, ['akurasi', 'confidence', 'probability', 'score']) ?? $fallback['akurasi']),
+            'akurasi' => $this->normalizeAccuracy($accuracySource ?? $fallback['akurasi']),
             'rekomendasi' => $this->normalizeText($this->pickValue($data, ['rekomendasi', 'recommendation', 'saran']) ?? $fallback['rekomendasi']),
         ];
     }
@@ -186,7 +189,8 @@ class DeteksiController extends Controller
     private function normalizeAccuracy(mixed $value): int
     {
         if (is_array($value) || is_object($value)) {
-            $value = $this->pickValue((array) $value, ['akurasi', 'confidence', 'probability', 'score', 'value'])
+            $value = $this->pickValue((array) $value, ['akurasi', 'confidence', 'probability', 'score', 'value', 'confidence_score', 'confidence_pct', 'conf'])
+                ?? $this->findByKeysRecursive((array) $value, ['akurasi', 'confidence', 'probability', 'score', 'value', 'confidence_score', 'confidence_pct', 'conf'])
                 ?? $this->firstScalar((array) $value);
         }
 
@@ -195,7 +199,14 @@ class DeteksiController extends Controller
         }
 
         if (is_string($value)) {
-            $value = str_replace('%', '', $value);
+            $normalized = str_replace([',', '%'], ['.', ''], trim($value));
+
+            // Handles strings like "Confidence: 87.5%" by extracting first numeric token.
+            if (preg_match('/-?\d+(?:\.\d+)?/', $normalized, $matches) === 1) {
+                $value = $matches[0];
+            } else {
+                return 0;
+            }
         }
 
         $accuracy = (float) $value;
@@ -205,6 +216,82 @@ class DeteksiController extends Controller
         }
 
         return max(0, min(100, (int) round($accuracy)));
+    }
+
+    private function extractAccuracyFromPredictions(array $data): mixed
+    {
+        $predictions = $this->pickValue($data, ['predictions', 'classes', 'results', 'labels']);
+
+        if (! is_array($predictions)) {
+            return null;
+        }
+
+        // Case 1: list of objects/arrays => pick highest confidence-like score.
+        if (array_is_list($predictions)) {
+            $best = null;
+
+            foreach ($predictions as $item) {
+                if (is_object($item)) {
+                    $item = (array) $item;
+                }
+
+                if (! is_array($item)) {
+                    continue;
+                }
+
+                $candidate = $this->pickValue($item, ['akurasi', 'confidence', 'probability', 'score', 'value', 'confidence_score', 'confidence_pct', 'conf'])
+                    ?? $this->findByKeysRecursive($item, ['akurasi', 'confidence', 'probability', 'score', 'value', 'confidence_score', 'confidence_pct', 'conf']);
+
+                $candidateInt = $this->normalizeAccuracy($candidate);
+
+                if ($best === null || $candidateInt > $best) {
+                    $best = $candidateInt;
+                }
+            }
+
+            return $best;
+        }
+
+        // Case 2: key-value map label => score.
+        $best = null;
+        foreach ($predictions as $score) {
+            $candidateInt = $this->normalizeAccuracy($score);
+            if ($best === null || $candidateInt > $best) {
+                $best = $candidateInt;
+            }
+        }
+
+        return $best;
+    }
+
+    private function findByKeysRecursive(array $source, array $keys): mixed
+    {
+        $targets = array_map('strtolower', $keys);
+
+        foreach ($source as $key => $value) {
+            if (is_string($key) && in_array(strtolower($key), $targets, true) && $value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        foreach ($source as $value) {
+            if (is_array($value)) {
+                $found = $this->findByKeysRecursive($value, $keys);
+                if ($found !== null && $found !== '') {
+                    return $found;
+                }
+                continue;
+            }
+
+            if (is_object($value)) {
+                $found = $this->findByKeysRecursive((array) $value, $keys);
+                if ($found !== null && $found !== '') {
+                    return $found;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function normalizeText(mixed $value): ?string

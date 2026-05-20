@@ -2,27 +2,7 @@
 
 <?php $__env->startSection('title','Hasil Deteksi'); ?>
 <?php $__env->startSection('styles'); ?>
-<style>
-<?php $isSehat=$deteksi->hasil==='Sehat'; $isBerat=$deteksi->tingkat_keparahan==='Berat'; ?>
-.res-header{border-radius:var(--radius-lg);padding:28px 24px;margin-bottom:20px;display:flex;align-items:center;gap:20px;}
-.res-header.sehat{background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border:1px solid #6EE7B7;}
-.res-header.sakit{background:linear-gradient(135deg,#FEF3C7,#FDE68A);border:1px solid #FCD34D;}
-.res-header.berat{background:linear-gradient(135deg,#FEF2F2,#FECACA);border:1px solid #FCA5A5;}
-.res-icon{font-size:3.5rem;flex-shrink:0;}
-.res-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-.res-nama{font-family:var(--font-display);font-size:1.55rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
-.res-nama.sehat{color:#065F46;} .res-nama.sakit{color:#92400E;} .res-nama.berat{color:#7F1D1D;}
-.acc-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(0,0,0,.06);padding:6px 14px;border-radius:20px;font-size:.83rem;font-weight:700;}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-.info-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
-.info-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:4px;}
-.info-val{font-size:.9rem;font-weight:600;color:var(--text);}
-.rek-box{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:20px;}
-.rek-title{font-weight:700;font-size:1rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.rek-text{font-size:.875rem;color:var(--text);line-height:1.7;}
-.hasil-img{width:100%;max-height:240px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:20px;}
-.act-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px;}
-</style>
+<link rel="stylesheet" href="<?php echo e(asset('css/pages/deteksi-hasil.css')); ?>">
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
 <?php $isSehat=$deteksi->hasil==='Sehat'; $isBerat=$deteksi->tingkat_keparahan==='Berat'; $hc=$isSehat?'sehat':($isBerat?'berat':'sakit'); $emoji=$isSehat?'✅':($isBerat?'🚨':'⚠️'); ?>
